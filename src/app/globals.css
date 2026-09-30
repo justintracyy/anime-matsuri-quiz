@@ -1,0 +1,161 @@
+@import "tailwindcss";
+
+@custom-variant dark (&:is(.dark *));
+
+/* ── Anime Matsuri Season 2: Sakura & Spirits palette ─────────────────────── */
+:root {
+  --cream: #fff8f3;
+  --plum: #6e4f74;
+  --plum-dark: #4b3d4f;
+  --lavender: #8d6e95;
+  --sakura: #e991a0;
+  --sakura-light: #f7b7c3;
+  --gold: #d8a56d;
+  --muted-text: #8d7a8f;
+  --error: #d22f3a;
+  --dusty-pink: #ecc9cf;
+  --blush: #fbe9ec;
+  --lavender-mist: #efe7f2;
+
+  /* shadcn/ui semantic tokens */
+  --radius: 1rem;
+  --background: var(--cream);
+  --foreground: var(--plum-dark);
+  --card: #ffffff;
+  --card-foreground: var(--plum-dark);
+  --popover: #ffffff;
+  --popover-foreground: var(--plum-dark);
+  --primary: var(--plum);
+  --primary-foreground: #ffffff;
+  --secondary: var(--blush);
+  --secondary-foreground: var(--plum-dark);
+  --muted: #f7eeec;
+  --muted-foreground: var(--muted-text);
+  --accent: var(--lavender-mist);
+  --accent-foreground: var(--plum-dark);
+  --destructive: var(--error);
+  --destructive-foreground: #ffffff;
+  --border: var(--dusty-pink);
+  --input: var(--dusty-pink);
+  --ring: var(--sakura);
+}
+
+@theme inline {
+  --color-cream: var(--cream);
+  --color-plum: var(--plum);
+  --color-plum-dark: var(--plum-dark);
+  --color-lavender: var(--lavender);
+  --color-sakura: var(--sakura);
+  --color-sakura-light: var(--sakura-light);
+  --color-gold: var(--gold);
+  --color-muted-text: var(--muted-text);
+  --color-error: var(--error);
+  --color-dusty-pink: var(--dusty-pink);
+  --color-blush: var(--blush);
+  --color-lavender-mist: var(--lavender-mist);
+
+  --color-background: var(--background);
+  --color-foreground: var(--foreground);
+  --color-card: var(--card);
+  --color-card-foreground: var(--card-foreground);
+  --color-popover: var(--popover);
+  --color-popover-foreground: var(--popover-foreground);
+  --color-primary: var(--primary);
+  --color-primary-foreground: var(--primary-foreground);
+  --color-secondary: var(--secondary);
+  --color-secondary-foreground: var(--secondary-foreground);
+  --color-muted: var(--muted);
+  --color-muted-foreground: var(--muted-foreground);
+  --color-accent: var(--accent);
+  --color-accent-foreground: var(--accent-foreground);
+  --color-destructive: var(--destructive);
+  --color-destructive-foreground: var(--destructive-foreground);
+  --color-border: var(--border);
+  --color-input: var(--input);
+  --color-ring: var(--ring);
+
+  --radius-sm: calc(var(--radius) - 6px);
+  --radius-md: calc(var(--radius) - 4px);
+  --radius-lg: var(--radius);
+  --radius-xl: calc(var(--radius) + 6px);
+  --radius-2xl: calc(var(--radius) + 12px);
+
+  --font-sans: var(--font-body), ui-sans-serif, system-ui, sans-serif;
+  --font-serif: var(--font-heading), "Georgia", ui-serif, serif;
+
+  --shadow-soft: 0 10px 30px -12px rgb(110 79 116 / 0.25), 0 2px 8px -2px rgb(233 145 160 / 0.18);
+  --shadow-glow: 0 0 0 4px rgb(247 183 195 / 0.45), 0 12px 32px -10px rgb(110 79 116 / 0.35);
+  --shadow-gold: 0 0 0 3px rgb(216 165 109 / 0.5), 0 14px 40px -12px rgb(216 165 109 / 0.6);
+
+  --animate-petal-fall: petal-fall linear infinite;
+  --animate-lantern-sway: lantern-sway 5s ease-in-out infinite;
+  --animate-spirit-float: spirit-float 6s ease-in-out infinite;
+  --animate-pulse-soft: pulse-soft 2.4s ease-in-out infinite;
+
+  @keyframes petal-fall {
+    0% { transform: translate3d(0, -10vh, 0) rotate(0deg); opacity: 0; }
+    10% { opacity: 0.9; }
+    100% { transform: translate3d(var(--petal-drift, 60px), 110vh, 0) rotate(540deg); opacity: 0; }
+  }
+  @keyframes lantern-sway {
+    0%, 100% { transform: rotate(-3deg); }
+    50% { transform: rotate(3deg); }
+  }
+  @keyframes spirit-float {
+    0%, 100% { transform: translateY(0) scale(1); }
+    50% { transform: translateY(-12px) scale(1.03); }
+  }
+  @keyframes pulse-soft {
+    0%, 100% { opacity: 1; }
+    50% { opacity: 0.55; }
+  }
+}
+
+@layer base {
+  * {
+    @apply border-border outline-ring/50;
+  }
+  html {
+    -webkit-tap-highlight-color: transparent;
+  }
+  body {
+    @apply bg-background text-foreground font-sans antialiased;
+    background-image:
+      radial-gradient(circle at 12% 8%, rgb(247 183 195 / 0.28), transparent 38%),
+      radial-gradient(circle at 88% 18%, rgb(141 110 149 / 0.14), transparent 40%),
+      radial-gradient(circle at 50% 110%, rgb(216 165 109 / 0.12), transparent 45%);
+    background-attachment: fixed;
+  }
+  h1, h2, h3, .font-heading {
+    @apply font-serif text-plum-dark;
+  }
+  :focus-visible {
+    @apply outline-2 outline-offset-2 outline-sakura;
+  }
+}
+
+@layer utilities {
+  .card-matsuri {
+    @apply rounded-2xl border-2 border-dusty-pink bg-white shadow-[var(--shadow-soft)];
+  }
+  .text-balance {
+    text-wrap: balance;
+  }
+  .gold-text {
+    background: linear-gradient(180deg, #f3d3a3 0%, #d8a56d 45%, #b07c43 100%);
+    -webkit-background-clip: text;
+    background-clip: text;
+    color: transparent;
+  }
+  .safe-bottom {
+    padding-bottom: max(1rem, env(safe-area-inset-bottom));
+  }
+}
+
+@media (prefers-reduced-motion: reduce) {
+  *, *::before, *::after {
+    animation-duration: 0.01ms !important;
+    animation-iteration-count: 1 !important;
+    transition-duration: 0.01ms !important;
+  }
+}

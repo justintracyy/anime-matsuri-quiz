@@ -1,0 +1,16 @@
+import "server-only";
+import { createClient, type SupabaseClient } from "@supabase/supabase-js";
+import { getServerEnv } from "../env";
+
+let client: SupabaseClient | null = null;
+
+/** Service-role client. Bypasses RLS — only ever import from server code. */
+export function getSupabaseAdmin(): SupabaseClient {
+  if (client) return client;
+  const env = getServerEnv();
+  client = createClient(env.NEXT_PUBLIC_SUPABASE_URL, env.SUPABASE_SERVICE_ROLE_KEY, {
+    auth: { persistSession: false, autoRefreshToken: false },
+    global: { headers: { "x-application-name": "anime-matsuri-quiz" } },
+  });
+  return client;
+}
