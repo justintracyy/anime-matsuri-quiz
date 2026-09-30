@@ -7,7 +7,7 @@ import { ConnectionBanner } from "@/components/game/connection-banner";
 import { MessageScreen, FullPageSpinner } from "@/components/states";
 import { useCountdown } from "@/hooks/use-countdown";
 import { useRealtimeTables } from "@/hooks/use-realtime";
-import { ApiError, apiFetch } from "@/lib/api/client";
+import { ApiError, apiFetch, serverNow } from "@/lib/api/client";
 import type { HostAction } from "@/lib/game/service";
 import type { HostView } from "@/lib/game/types";
 import { HostStage } from "./host-stage";
@@ -125,14 +125,20 @@ export function HostGame({ sessionId }: { sessionId: string }) {
   });
 
   // Persist the close when the server deadline passes so every device updates.
+  // Scheduled from question_ends_at (not the countdown) so a stale countdown can't end a question early.
   const closedFor = useRef<string | null>(null);
+  const questionId = view?.question?.id;
+  const endsAt = view?.session.questionEndsAt ?? null;
   useEffect(() => {
-    const qid = view?.question?.id;
-    if (phase === "active" && remainingMs === 0 && qid && closedFor.current !== qid) {
-      closedFor.current = qid;
+    if (phase !== "active" || !endsAt || !questionId) return;
+    const delay = Math.max(0, Date.parse(endsAt) - serverNow()) + 250;
+    const id = window.setTimeout(() => {
+      if (closedFor.current === questionId) return;
+      closedFor.current = questionId;
       void run("end_question");
-    }
-  }, [phase, remainingMs, view?.question?.id, run]);
+    }, delay);
+    return () => window.clearTimeout(id);
+  }, [phase, endsAt, questionId, run]);
 
   if (fatal) {
     return <MessageScreen title="Game not available" message={fatal.message} action={{ label: "Back to dashboard", href: "/admin" }} mood="wow" />;
