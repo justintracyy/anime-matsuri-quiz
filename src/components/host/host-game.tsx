@@ -6,10 +6,12 @@ import { toast } from "sonner";
 import { ConnectionBanner } from "@/components/game/connection-banner";
 import { MessageScreen, FullPageSpinner } from "@/components/states";
 import { useCountdown } from "@/hooks/use-countdown";
+import { useMediaPreload } from "@/hooks/use-media-preload";
 import { useRealtimeTables } from "@/hooks/use-realtime";
 import { ApiError, apiFetch, serverNow } from "@/lib/api/client";
 import type { HostAction } from "@/lib/game/service";
 import type { HostView } from "@/lib/game/types";
+import { withStableMedia } from "@/lib/media-cache";
 import { HostStage } from "./host-stage";
 
 export type RunAction = (action: HostAction, extra?: { playerId?: string; settings?: { allowLateJoin?: boolean; mirrorToPlayers?: boolean } }) => Promise<void>;
@@ -23,12 +25,14 @@ export function HostGame({ sessionId }: { sessionId: string }) {
   const [liveCount, setLiveCount] = useState<{ questionId: string; count: number } | null>(null);
   const viewRef = useRef<HostView | null>(null);
   const playersTimer = useRef<number | null>(null);
+  const media = useMediaPreload(sessionId);
 
   const apply = useCallback((next: HostView) => {
     const current = viewRef.current;
     if (current && next.session.id === current.session.id && next.session.stateVersion < current.session.stateVersion) return;
-    viewRef.current = next;
-    setView(next);
+    const stable = withStableMedia(next);
+    viewRef.current = stable;
+    setView(stable);
   }, []);
 
   const refresh = useCallback(async () => {
@@ -91,10 +95,12 @@ export function HostGame({ sessionId }: { sessionId: string }) {
       if (!current) return;
       setBusy(action);
       try {
-        const next = await apiFetch<HostView>(`/api/admin/sessions/${sessionId}/actions`, {
-          method: "POST",
-          json: { action, expectedVersion: current.session.stateVersion, ...extra },
-        });
+        const next = withStableMedia(
+          await apiFetch<HostView>(`/api/admin/sessions/${sessionId}/actions`, {
+            method: "POST",
+            json: { action, expectedVersion: current.session.stateVersion, ...extra },
+          }),
+        );
         viewRef.current = next;
         setView(next);
         setNetworkError(null);
@@ -150,7 +156,7 @@ export function HostGame({ sessionId }: { sessionId: string }) {
   return (
     <>
       <ConnectionBanner realtime={realtime} networkError={networkError} onRetry={() => void refresh()} />
-      <HostStage view={view} realtime={realtime} remainingMs={remainingMs} answerCount={answerCount} busy={busy} run={run} />
+      <HostStage view={view} realtime={realtime} remainingMs={remainingMs} answerCount={answerCount} busy={busy} run={run} media={media} />
     </>
   );
 }

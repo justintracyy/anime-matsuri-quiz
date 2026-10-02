@@ -7,6 +7,7 @@ import { QRCodeSVG } from "qrcode.react";
 import {
   ArrowRight,
   BarChart3,
+  CheckCircle2,
   Crown,
   Eye,
   FastForward,
@@ -45,7 +46,8 @@ import type { RealtimeStatus } from "@/hooks/use-realtime";
 import { MULTIPLIER_LABEL, PLAYER_STALE_MS, QUESTION_TYPE_INFO, type QuestionType } from "@/lib/constants";
 import { PHASE_LABEL } from "@/lib/game/phases";
 import type { HostAction } from "@/lib/game/service";
-import type { HostView } from "@/lib/game/types";
+import type { GamePhase, HostView } from "@/lib/game/types";
+import type { PreloadStatus } from "@/lib/media-cache";
 import { buildJoinUrl, formatPin } from "@/lib/pin";
 import { cn, formatPoints, formatSeconds } from "@/lib/utils";
 import type { RunAction } from "./host-game";
@@ -63,6 +65,7 @@ export function HostStage({
   answerCount,
   busy,
   run,
+  media,
 }: {
   view: HostView;
   realtime: RealtimeStatus;
@@ -70,6 +73,7 @@ export function HostStage({
   answerCount: number;
   busy: HostAction | null;
   run: RunAction;
+  media: PreloadStatus | null;
 }) {
   const { session, question } = view;
   const phase = session.phase;
@@ -143,6 +147,7 @@ export function HostStage({
             PIN <span className="ml-1 font-serif text-base font-bold tracking-widest">{formatPin(session.pin)}</span>
           </Badge>
           <Badge variant="lavender" className="px-3 py-1 text-sm">{PHASE_LABEL[phase]}</Badge>
+          <MediaBadge media={media} phase={phase} />
           <LiveDot status={realtime === "unavailable" ? "offline" : realtime} />
           <Button size="sm" variant="outline" onClick={() => setPlayersOpen(true)}>
             <Users /> {view.activePlayerCount} / {session.maxPlayers}
@@ -234,6 +239,30 @@ export function HostStage({
       <SettingsDialog open={settingsOpen} onOpenChange={setSettingsOpen} view={view} run={run} />
       <Confirmations confirm={confirm} setConfirm={setConfirm} run={run} />
     </div>
+  );
+}
+
+function MediaBadge({ media, phase }: { media: PreloadStatus | null; phase: GamePhase }) {
+  if (!media || media.total === 0) return null;
+  if (media.done + media.failed < media.total) {
+    return (
+      <Badge variant="outline" className="gap-1.5 px-3 py-1 text-sm" title="Downloading songs and pictures to this screen so questions start instantly">
+        <Loader2 className="size-3.5 animate-spin" /> Loading media {media.done}/{media.total}
+      </Badge>
+    );
+  }
+  if (media.failed > 0) {
+    return (
+      <Badge variant="gold" className="px-3 py-1 text-sm" title="These files will load when their question starts">
+        {media.failed} file{media.failed === 1 ? "" : "s"} will stream live
+      </Badge>
+    );
+  }
+  if (phase !== "lobby") return null;
+  return (
+    <Badge variant="success" className="gap-1.5 px-3 py-1 text-sm">
+      <CheckCircle2 className="size-3.5" /> Media ready {media.done}/{media.total}
+    </Badge>
   );
 }
 

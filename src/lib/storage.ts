@@ -1,4 +1,5 @@
 import "server-only";
+import { createHash } from "node:crypto";
 import { z } from "zod";
 import {
   AUDIO_EXTENSIONS,
@@ -79,17 +80,27 @@ export async function signPaths(paths: (string | null | undefined)[]): Promise<R
   return out;
 }
 
+/**
+ * Stable, opaque id for a stored file. Signed URLs change on every request, so
+ * clients use this to tell "same file, new link" from "different file" without
+ * seeing the path (which contains the original file name, i.e. the answer).
+ */
+export function mediaKey(path: string): string {
+  return createHash("sha256").update(path).digest("hex").slice(0, 20);
+}
+
 /** Replace storage paths on a question view with signed URLs (null when the file is missing). */
 export async function withSignedMedia<T extends { question: QuestionView | null }>(view: T): Promise<T> {
   const q = view.question;
   if (!q || (!q.image && !q.audio)) return view;
   const urls = await signPaths([q.image?.path, q.audio?.path]);
+  const sign = (path: string | null) => ({ path: null, key: path ? mediaKey(path) : null, url: (path && urls[path]) || null });
   return {
     ...view,
     question: {
       ...q,
-      image: q.image ? { path: null, url: (q.image.path && urls[q.image.path]) || null } : null,
-      audio: q.audio ? { ...q.audio, path: null, url: (q.audio.path && urls[q.audio.path]) || null } : null,
+      image: q.image ? sign(q.image.path) : null,
+      audio: q.audio ? { ...q.audio, ...sign(q.audio.path) } : null,
     },
   };
 }

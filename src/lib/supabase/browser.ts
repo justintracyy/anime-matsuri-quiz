@@ -21,7 +21,9 @@ export function getSupabaseBrowser(): SupabaseClient | null {
   }
   client = createClient(origin, key, {
     auth: { persistSession: false, autoRefreshToken: false },
-    realtime: { params: { eventsPerSecond: 20 } },
+    // Heartbeats from a Web Worker keep the socket alive when the tab is in the background
+    // or the phone screen dims, where browsers throttle normal timers.
+    realtime: { params: { eventsPerSecond: 20 }, worker: true },
   });
   return client;
 }

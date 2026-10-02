@@ -152,6 +152,8 @@ export interface SessionView {
 export interface MediaRef {
   /** Storage path; converted to a signed URL by the route handler. */
   path: string | null;
+  /** Opaque id that stays the same for the same file while `url` is re-signed on every request. */
+  key?: string | null;
   url?: string | null;
 }
 

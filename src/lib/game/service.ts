@@ -454,6 +454,26 @@ export class GameService {
     };
   }
 
+  /** Every file the host screen can show in this game, in play order, so it can be downloaded ahead of time. */
+  async getSessionMedia(sessionId: string): Promise<{ kind: "image" | "audio"; path: string }[]> {
+    const session = await this.store.getSession(sessionId);
+    if (!session) throw new GameError("NOT_FOUND", "Game session not found.");
+    const records = await this.store.getQuestions(session.question_order);
+    const media: { kind: "image" | "audio"; path: string }[] = [];
+    const seen = new Set<string>();
+    const add = (kind: "image" | "audio", path: string | null) => {
+      if (!path || seen.has(path)) return;
+      seen.add(path);
+      media.push({ kind, path });
+    };
+    for (const r of records) {
+      add("audio", r.audio_path);
+      add("image", r.media_path);
+      add("image", r.original_media_path);
+    }
+    return media;
+  }
+
   async hostAction(sessionId: string, input: HostActionInput): Promise<SessionRow> {
     const session = await this.store.getSession(sessionId);
     if (!session) throw new GameError("NOT_FOUND", "Game session not found.");

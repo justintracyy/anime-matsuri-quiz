@@ -10,6 +10,7 @@ import { useRealtimeTables } from "@/hooks/use-realtime";
 import { ApiError, apiFetch } from "@/lib/api/client";
 import { HEARTBEAT_INTERVAL_MS } from "@/lib/constants";
 import type { PlayerView } from "@/lib/game/types";
+import { withStableMedia } from "@/lib/media-cache";
 import { clearPlayer, loadPlayer, playerHeaders, type StoredPlayer } from "@/lib/player-session";
 import { formatPoints, sleep } from "@/lib/utils";
 import { PlayerScreens } from "./player-screens";
@@ -36,7 +37,7 @@ export function PlayerGame({ pin }: { pin: string }) {
     if (!creds) return;
     const seq = ++requestSeq.current;
     try {
-      const next = await apiFetch<PlayerView>("/api/play/state", { headers: playerHeaders(creds) });
+      const next = withStableMedia(await apiFetch<PlayerView>("/api/play/state", { headers: playerHeaders(creds) }));
       // Ignore out-of-order responses.
       if (seq < requestSeq.current && viewRef.current && next.session.stateVersion < viewRef.current.session.stateVersion) return;
       viewRef.current = next;

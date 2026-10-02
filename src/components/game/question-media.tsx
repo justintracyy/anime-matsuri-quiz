@@ -5,6 +5,7 @@ import { AlertTriangle, ImageOff, Pause, Play, RotateCcw, Volume2 } from "lucide
 import { Button } from "@/components/ui/button";
 import { Spirit } from "@/components/brand/decorations";
 import type { QuestionView } from "@/lib/game/types";
+import { forgetMediaUrl } from "@/lib/media-cache";
 import { cn } from "@/lib/utils";
 
 export function QuestionImage({
@@ -44,7 +45,10 @@ export function QuestionImage({
     <img
       src={url}
       alt={alt}
-      onError={() => setFailedUrl(url)}
+      onError={() => {
+        setFailedUrl(url);
+        forgetMediaUrl(url);
+      }}
       className={cn("mx-auto max-h-full w-auto rounded-2xl object-contain", className)}
       draggable={false}
     />
@@ -135,7 +139,10 @@ export function AudioClipPlayer({
         onPause={() => setPlaying(false)}
         onEnded={() => setPlaying(false)}
         onTimeUpdate={onTimeUpdate}
-        onError={() => setFailedUrl(audio.url ?? null)}
+        onError={() => {
+          setFailedUrl(audio.url ?? null);
+          if (audio.url) forgetMediaUrl(audio.url);
+        }}
       />
       <div className={cn("relative flex shrink-0 items-center justify-center", compact ? "size-12" : "size-20")}>
         <Spirit className={cn("absolute inset-0", playing && "animate-spirit-float")} mood={playing ? "wow" : "happy"} />
