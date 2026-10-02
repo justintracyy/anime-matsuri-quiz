@@ -6,6 +6,7 @@ import { toast } from "sonner";
 import { ConnectionBanner } from "@/components/game/connection-banner";
 import { MessageScreen, FullPageSpinner } from "@/components/states";
 import { useCountdown } from "@/hooks/use-countdown";
+import { useHostSound } from "@/hooks/use-host-sound";
 import { useMediaPreload } from "@/hooks/use-media-preload";
 import { useRealtimeTables } from "@/hooks/use-realtime";
 import { ApiError, apiFetch, serverNow } from "@/lib/api/client";
@@ -129,6 +130,7 @@ export function HostGame({ sessionId }: { sessionId: string }) {
     pausedRemainingMs: view?.session.pausedRemainingMs ?? null,
     enabled: phase === "active" || phase === "paused",
   });
+  useHostSound(view, remainingMs);
 
   // Persist the close when the server deadline passes so every device updates.
   // Scheduled from question_ends_at (not the countdown) so a stale countdown can't end a question early.

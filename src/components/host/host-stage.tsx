@@ -49,8 +49,10 @@ import type { HostAction } from "@/lib/game/service";
 import type { GamePhase, HostView } from "@/lib/game/types";
 import type { PreloadStatus } from "@/lib/media-cache";
 import { buildJoinUrl, formatPin } from "@/lib/pin";
+import { getSoundEngine } from "@/lib/sound/engine";
 import { cn, formatPoints, formatSeconds } from "@/lib/utils";
 import type { RunAction } from "./host-game";
+import { SoundSettings, SoundToggle } from "./sound-controls";
 
 type Confirm = { kind: "skip" } | { kind: "end" } | { kind: "restart" } | { kind: "remove"; playerId: string; nickname: string } | null;
 
@@ -99,7 +101,7 @@ export function HostStage({
     }
   }, [phase, isLast]);
 
-  // Keyboard: Space / Enter / → triggers the primary action; P pauses/resumes.
+  // Keyboard: Space / Enter / → triggers the primary action; P pauses/resumes; M mutes.
   useEffect(() => {
     const onKey = (e: KeyboardEvent) => {
       const target = e.target as HTMLElement;
@@ -110,6 +112,8 @@ export function HostStage({
       } else if (e.key.toLowerCase() === "p" && !busy) {
         if (phase === "active") void run("pause");
         else if (phase === "paused") void run("resume");
+      } else if (e.key.toLowerCase() === "m") {
+        getSoundEngine()?.toggleMute();
       }
     };
     window.addEventListener("keydown", onKey);
@@ -121,7 +125,8 @@ export function HostStage({
       <div className="relative">
         <FestivalBackdrop petals={0} lanterns={false} spirits={false} />
         <ChampionshipScreen podium={view.podium} />
-        <div className="fixed bottom-4 right-4 z-50 flex gap-2">
+        <div className="fixed bottom-4 right-4 z-50 flex items-center gap-2">
+          <SoundToggle />
           <Button variant="outline" onClick={() => setConfirm({ kind: "restart" })}>
             <RotateCcw /> Restart game
           </Button>
@@ -152,6 +157,7 @@ export function HostStage({
           <Button size="sm" variant="outline" onClick={() => setPlayersOpen(true)}>
             <Users /> {view.activePlayerCount} / {session.maxPlayers}
           </Button>
+          <SoundToggle />
           <Button size="icon-sm" variant="outline" aria-label="Game settings" onClick={() => setSettingsOpen(true)}>
             <Settings2 />
           </Button>
@@ -215,7 +221,7 @@ export function HostStage({
             </Button>
           )}
           <span className="hidden items-center gap-1 text-xs text-muted-text lg:inline-flex">
-            <Keyboard className="size-3.5" /> Space = next step · P = pause
+            <Keyboard className="size-3.5" /> Space = next step · P = pause · M = mute
           </span>
           <div className="ml-auto flex flex-wrap items-center gap-2">
             {phase !== "lobby" && (
@@ -595,6 +601,7 @@ function SettingsDialog({ open, onOpenChange, view, run }: { open: boolean; onOp
             </div>
             <Switch id="mirror" checked={view.session.mirrorToPlayers} onCheckedChange={(v) => void run("update_settings", { settings: { mirrorToPlayers: v } })} />
           </div>
+          <SoundSettings />
         </div>
       </DialogContent>
     </Dialog>
